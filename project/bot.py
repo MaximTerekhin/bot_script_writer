@@ -135,9 +135,9 @@ def get_add_info(message):
 @bot.message_handler(commands=['begin'])
 def create_promt(message):
     user_id = message.from_user.id
-    promts = (f'Напиши историю в стиле {user_history[user_id]["genre"]}'
-              f'с главным героем {user_history[user_id]["pers"]}'
-              f'начальная позиция {user_history[user_id]["setting"]}'
+    promts = (f'Напиши историю в стиле {user_history["genre"]}'
+              f'с главным героем {user_history["pers"]}'
+              f'начальная позиция {user_history["setting"]}'
               f'История должна состоять из 3-4 предложений')
     logging.info('Промт сгенерирован')
     if user_history['additional_info']:
