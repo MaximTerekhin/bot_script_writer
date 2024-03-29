@@ -1,0 +1,6 @@
+- telebot
+- telebot.types
+- requests
+- sqlite
+- logging
+- date_time

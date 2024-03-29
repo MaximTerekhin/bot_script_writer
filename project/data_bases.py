@@ -1,6 +1,7 @@
 import sqlite3
 from config import BASE_NAME
 
+
 def execute_quere(sql_quere, data = None, db_name=f'{BASE_NAME}'):
     con = sqlite3.connect(db_name)
     cursor = con.cursor()
@@ -23,40 +24,59 @@ def execute_selection_quere(sql_quere, data = None, db_name=f'{BASE_NAME}'):
     return rows
 
 def create_table(table_name):
-    sql_quere = f'''
-    CREATE TABLE IF NOT EXISTS {table_name}(
+    sql_quere = f''' CREATE TABLE IF NOT EXISTS {table_name}(
     id INTEGER PRIMARY KEY,
-    user_id INTEGER,
+    user_id TEXT,
     role TEXT,
     content TEXT,
-    date TEXT,
-    tokens INTEGER,
-    session INTEGER);
+    date DATETIME,
+    session INTEGER,
+    tokens INTEGER);
     '''
     execute_quere(sql_quere)
 
-def insert_row_user_id_session(user_id, session):
+def insert_session(values):
     sql_quere = '''
-    INSERT INTO Promts(user_id, session) Values(?,?)
-    '''
-    execute_quere(sql_quere,user_id,session)
-
-def insert_row_content(values):
-    sql_quere = '''
-    INSERT INTO Promts(content) Values(?)
+    INSERT INTO Promts (session) VALUES(?)
     '''
     execute_quere(sql_quere,values)
 
+def get_session(user_id):
+    sql_quere = f'''SELECT session from Promts WHERE user_id="{user_id}"
+                '''
+    return execute_selection_quere(sql_quere)
 
-def get_row_by_user_id(user_id,session):
+def insert_user_id(value):
+    sql_quere = '''
+    INSERT INTO Promts(user_id) VALUES(?)
+    '''
+    execute_quere(sql_quere,value)
+
+
+
+def get_token_by_user_id(user_id,session):
     sql_quere = f'''
-    SELECT tokens FROM Promts WHERE user_id = {user_id} AND session={session}
+    SELECT tokens FROM Promts WHERE user_id = "{user_id}" AND session={session}
     '''
     execute_selection_quere(sql_quere)
 
-def get_row_session(user_id):
-    sql_quere = f'''
-    SELECT session FROM Promts WHERE user_id={user_id}
+def insert_tokens(value):
+    sql_quere = '''
+    INSERT INTO Promts (tokens) VALUES(?)
     '''
-    execute_selection_quere(sql_quere)
+    execute_quere(sql_quere,value)
 
+
+def insert_date(value):
+    sql_quere = '''
+    INSERT INTO Promts (date) VALUES(?)
+    '''
+    execute_quere(sql_quere,value)
+
+def insert_info(value):
+    sql_quere = '''INSERT INTO Promts (user_id, role, content, date, tokens, session) VALUES(?,?,?,?,?,?)'''
+    execute_quere(sql_quere,value)
+
+def check_users(MAX_USERS=3):
+    sql_quere = '''SELECT DISTINCT user_id from Promts'''
+    execute_selection_quere(sql_quere)

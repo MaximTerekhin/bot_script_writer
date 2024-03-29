@@ -1,13 +1,8 @@
 import logging
-
-from config import  IAM_TOKEN, FOLDER_ID, TOKEN_BOT
+from config import  IAM_TOKEN, FOLDER_ID
 from info import SYSTEM_PROMPT, MAX_TOKENS
 import requests
-import telebot
-import datetime
 
-bot = telebot.TeleBot(TOKEN_BOT)
-user_history = {}
 
 
 
@@ -23,6 +18,7 @@ def count_tokens_in_dialog(messages):
         "maxTokens": MAX_TOKENS,
         "messages" : []
     }
+
     for ell in messages:
         data["messages"].append(ell)
 
@@ -32,25 +28,27 @@ def count_tokens_in_dialog(messages):
         headers=headers
     ).json()['tokens']
     tokens = len(count_tokens)
-    user_history['tokens'] = tokens
+
     return tokens
+messages = []
+messages.append({
+    'role': 'system', 'text': SYSTEM_PROMPT
+})
 
-
-
-def ask_gpt(message,promts):
+def ask_gpt(promts):
     logging.info('Начал работать метод ask_gpt (обработка запроса)')
-    user_id = message.from_user.id
     url = f"https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
     headers = {
         'Authorization': f'Bearer {IAM_TOKEN}',
         'Content-Type': 'application/json'
     }
+    logging.info('IAM - токен получен.')
 
     data = {
-        "modelUri": f"gpt://{FOLDER_ID}/yandexgpt/latest",
+        "modelUri": f"gpt://{FOLDER_ID}/yandexgpt-lite/latest",
         "completionOptions": {
             "stream": False,
-            "temperature": 1.5,
+            "temperature": 1,
             "maxTokens": 350
         },
         "messages": [
@@ -58,20 +56,38 @@ def ask_gpt(message,promts):
             {"role": "user", "text": promts},
         ]
     }
+    logging.info('Данные к запросу сформаровались.')
 
 
-    response = requests.post(url, headers=headers, json=data)
-    try:
-        if response.status_code == 200:
-            result = response.json()['result']['alternatives'][0]['message']['text']
-            user_history['role'] = 'assistant'
-            now = datetime.datetime.now()
-            user_history['date'] = now
-            user_history['result'] += result
+    response = requests.post(url = url, headers=headers, json=data)
+    logging.info('Запрос отправлен.')
+    print(response)
+    if response.status_code == 200:
+        result = response.json()['result']['alternatives'][0]['message']['text']
+        logging.info('Получен результат.')
+        assistant = result
+        messages.append({
+                 'role': 'assistant', 'text': assistant})
+        return result
 
-            #bot.send_message(user_id,result)
-            #bot.send_message(user_id, '...')
-            return result
 
-    except:
-        bot.send_message(user_id,'Ошибка ❌')
+
+def token_count(text):
+    logging.info('Подсчет токенов в определённом сообщении...')
+    headers = {
+        'Authorization': f'Bearer {IAM_TOKEN}',
+        'Content-Type': 'application/json'
+    }
+
+    data = {
+        "modelUri": f"gpt://{FOLDER_ID}/yandexgpt-lite/latest",
+        "maxTokens": MAX_TOKENS,
+        'text': text
+        }
+    tokens = requests.post(
+        "https://llm.api.cloud.yandex.net/foundationModels/v1/tokenizeCompletion",
+        json=data,
+        headers=headers
+    ).json()['tokens']
+
+    print(len(tokens))
